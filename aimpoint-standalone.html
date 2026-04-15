@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AS AimPoint">
+<title>AS Golf – AimPoint</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, 'Segoe UI', sans-serif; background: #f2f5f2; min-height: 100vh; padding: 10px; display: flex; justify-content: center; }
+  .wrap { width: 100%; max-width: 420px; }
+
+  /* HEADER */
+  .header { background: linear-gradient(135deg, #1c3a1c, #2d5a2d); border-radius: 14px; padding: 10px 14px; margin-bottom: 8px; }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+  .brand-name { color: #c8922a; font-size: 13px; font-weight: 800; letter-spacing: 0.5px; }
+  .brand-sub { color: rgba(255,255,255,0.6); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; }
+  .unit-btn { background: rgba(255,255,255,0.15); border: 1.5px solid #c8922a; color: #c8922a; border-radius: 8px; padding: 4px 10px; font-weight: 800; font-size: 11px; cursor: pointer; }
+
+  /* RESULT */
+  .result { text-align: center; margin: 6px 0 4px; }
+  .result-label { color: rgba(255,255,255,0.6); font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+  .result-number { color: #c8922a; font-size: 72px; font-weight: 900; line-height: 1; }
+  .result-unit { color: rgba(255,255,255,0.8); font-size: 14px; font-weight: 700; }
+  .result-sub { color: rgba(255,255,255,0.4); font-size: 11px; margin-top: 2px; }
+
+  /* STIMP */
+  .stimp-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+  .stimp-label { color: rgba(255,255,255,0.6); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
+  .stimp-val { color: white; font-weight: 800; font-size: 13px; }
+  input[type=range] { width: 100%; accent-color: #c8922a; cursor: pointer; height: 4px; }
+  .stimp-ticks { display: flex; justify-content: space-between; font-size: 10px; margin-top: 1px; }
+  .stimp-ticks span { color: rgba(255,255,255,0.5); font-weight: 400; }
+  .stimp-ticks span.active { color: #c8922a; font-weight: 800; }
+
+  /* SUMMARY */
+  .summary { background: white; border-radius: 10px; padding: 6px 12px; margin-bottom: 8px; font-size: 11px; color: #555; font-weight: 600; text-align: center; border: 1px solid #dde8dd; }
+  .summary span { color: #1e7a5a; font-weight: 800; }
+
+  /* SECTION */
+  .sec-label { font-size: 9px; font-weight: 800; color: #888; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; }
+  .section { margin-bottom: 7px; }
+
+  /* GRIDS */
+  .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; }
+  .grid-5 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap: 5px; }
+
+  /* BUTTONS */
+  .btn { border-radius: 9px; padding: 8px 4px; font-size: 12px; font-weight: 700; border: 2px solid #dde8dd; background: white; color: #333; cursor: pointer; text-align: center; line-height: 1.2; transition: all 0.15s; }
+  .btn.active { background: #1e7a5a; border-color: #1e7a5a; color: white; }
+  .btn-dist { font-size: 13px; padding: 10px 4px; }
+
+  .footer { text-align: center; color: #bbb; font-size: 10px; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="brand-name">Anthony Summers Golf</div>
+        <div class="brand-sub">AimPoint Break Calculator</div>
+      </div>
+      <button class="unit-btn" onclick="toggleUnit()" id="unitBtn">cm → in</button>
+    </div>
+
+    <!-- RESULT -->
+    <div class="result">
+      <div class="result-label">Expected Break</div>
+      <div class="result-number" id="resultNum">—</div>
+      <div class="result-unit" id="resultUnit">centimetres</div>
+      <div class="result-sub" id="resultSub"></div>
+    </div>
+
+    <!-- STIMP SLIDER -->
+    <div class="stimp-row">
+      <span class="stimp-label">Green Speed</span>
+      <span class="stimp-val" id="stimpVal">Stimp 9</span>
+    </div>
+    <input type="range" min="7" max="12" value="9" id="stimpSlider" oninput="onStimpChange(this.value)">
+    <div class="stimp-ticks" id="stimpTicks">
+      <span>7</span><span>8</span><span class="active">9</span><span>10</span><span>11</span><span>12</span>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="summary" id="summary">
+    <span id="sumSlope">Avg 2%</span> · <span id="sumDir">90° Side</span> · <span id="sumDist">10ft</span>
+  </div>
+
+  <!-- SLOPE -->
+  <div class="section">
+    <div class="sec-label">Slope Steepness</div>
+    <div class="grid-4" id="slopeGrid">
+      <button class="btn" onclick="setSlope('Flat 1%',this)">Flat 1%</button>
+      <button class="btn active" onclick="setSlope('Avg 2%',this)">Avg 2%</button>
+      <button class="btn" onclick="setSlope('Steep 3%',this)">Steep 3%</button>
+      <button class="btn" onclick="setSlope('Severe 4%',this)">Severe 4%</button>
+    </div>
+  </div>
+
+  <!-- DIRECTION -->
+  <div class="section">
+    <div class="sec-label">Putt Direction</div>
+    <div class="grid-5" id="dirGrid">
+      <button class="btn" onclick="setDir('30° Down',this)">30°<br>Down</button>
+      <button class="btn" onclick="setDir('60° Down',this)">60°<br>Down</button>
+      <button class="btn active" onclick="setDir('90° Side',this)">90°<br>Side</button>
+      <button class="btn" onclick="setDir('60° Up',this)">60°<br>Up</button>
+      <button class="btn" onclick="setDir('30° Up',this)">30°<br>Up</button>
+    </div>
+  </div>
+
+  <!-- DISTANCE -->
+  <div class="section">
+    <div class="sec-label">Distance from Hole</div>
+    <div class="grid-4" id="distGrid">
+      <button class="btn btn-dist" onclick="setDist(5,this)">5ft</button>
+      <button class="btn btn-dist active" onclick="setDist(10,this)">10ft</button>
+      <button class="btn btn-dist" onclick="setDist(15,this)">15ft</button>
+      <button class="btn btn-dist" onclick="setDist(20,this)">20ft</button>
+    </div>
+  </div>
+
+  <div class="footer">Based on AimPoint® chart data · For coaching use only</div>
+</div>
+
+<script>
+const DATA = {
+  7: {
+    "Flat 1%": {
+      "30° Down": {5:-3,10:0,15:3,20:6},
+      "60° Down": {5:-2,10:4,15:9,20:13},
+      "90° Side": {5:-1,10:4,15:10,20:15},
+      "60° Up":   {5:-2,10:3,15:7,20:12},
+      "30° Up":   {5:-3,10:-1,15:2,20:5}
+    },
+    "Avg 2%": {
+      "30° Down": {5:0,10:7,15:13,20:20},
+      "60° Down": {5:2,10:14,15:25,20:34},
+      "90° Side": {5:3,10:14,15:26,20:36},
+      "60° Up":   {5:1,10:11,15:18,20:27},
+      "30° Up":   {5:-2,10:3,15:8,20:12}
+    },
+    "Steep 3%": {
+      "30° Down": {5:3,10:15,15:27,20:37},
+      "60° Down": {5:8,10:26,15:43,20:60},
+      "90° Side": {5:8,10:25,15:42,20:58},
+      "60° Up":   {5:5,10:17,15:30,20:42},
+      "30° Up":   {5:0,10:6,15:13,20:19}
+    },
+    "Severe 4%": {
+      "30° Down": {5:8,10:26,15:43,20:59},
+      "60° Down": {5:14,10:40,15:66,20:89},
+      "90° Side": {5:13,10:37,15:61,20:82},
+      "60° Up":   {5:7,10:24,15:41,20:56},
+      "30° Up":   {5:1,10:9,15:17,20:25}
+    }
+  },
+  8: {
+    "Flat 1%": {
+      "30° Down": {5:-3,10:5,15:5,20:8},
+      "60° Down": {5:0,10:5,15:11,20:17},
+      "90° Side": {5:0,10:6,15:13,20:19},
+      "60° Up":   {5:-2,10:4,15:9,20:14},
+      "30° Up":   {5:-3,10:0,15:3,20:6}
+    },
+    "Avg 2%": {
+      "30° Down": {5:0,10:8,15:16,20:25},
+      "60° Down": {5:3,10:16,15:30,20:42},
+      "90° Side": {5:3,10:17,15:31,20:44},
+      "60° Up":   {5:1,10:11,15:22,20:32},
+      "30° Up":   {5:-1,10:3,15:8,20:16}
+    },
+    "Steep 3%": {
+      "30° Down": {5:5,10:20,15:34,20:48},
+      "60° Down": {5:11,10:33,15:54,20:73},
+      "90° Side": {5:9,10:31,15:51,20:70},
+      "60° Up":   {5:5,10:20,15:35,20:49},
+      "30° Up":   {5:0,10:8,15:16,20:22}
+    },
+    "Severe 4%": {
+      "30° Down": {5:11,10:34,15:58,20:78},
+      "60° Down": {5:18,10:52,15:84,20:113},
+      "90° Side": {5:16,10:44,15:74,20:100},
+      "60° Up":   {5:9,10:28,15:47,20:65},
+      "30° Up":   {5:1,10:11,15:20,20:29}
+    }
+  },
+  9: {
+    "Flat 1%": {
+      "30° Down": {5:-3,10:2,15:7,20:10},
+      "60° Down": {5:0,10:7,15:14,20:20},
+      "90° Side": {5:0,10:8,15:15,20:22},
+      "60° Up":   {5:-1,10:5,15:11,20:17},
+      "30° Up":   {5:-3,10:1,15:4,20:7}
+    },
+    "Avg 2%": {
+      "30° Down": {5:2,10:12,15:21,20:30},
+      "60° Down": {5:6,10:21,15:37,20:50},
+      "90° Side": {5:6,10:21,15:37,20:51},
+      "60° Up":   {5:3,10:15,15:26,20:37},
+      "30° Up":   {5:0,10:5,15:11,20:17}
+    },
+    "Steep 3%": {
+      "30° Down": {5:8,10:25,15:42,20:58},
+      "60° Down": {5:13,10:39,15:65,20:89},
+      "90° Side": {5:13,10:36,15:60,20:83},
+      "60° Up":   {5:7,10:23,15:41,20:56},
+      "30° Up":   {5:1,10:9,15:18,20:25}
+    },
+    "Severe 4%": {
+      "30° Down": {5:16,10:45,15:75,20:100},
+      "60° Down": {5:24,10:64,15:90,20:141},
+      "90° Side": {5:20,10:53,15:88,20:120},
+      "60° Up":   {5:10,10:32,15:54,20:75},
+      "30° Up":   {5:2,10:12,15:23,20:33}
+    }
+  },
+  10: {
+    "Flat 1%": {
+      "30° Down": {5:-2,10:3,15:8,20:12},
+      "60° Down": {5:0,10:9,15:17,20:24},
+      "90° Side": {5:1,10:10,15:18,20:26},
+      "60° Up":   {5:0,10:7,15:14,20:20},
+      "30° Up":   {5:-2,10:2,15:5,20:9}
+    },
+    "Avg 2%": {
+      "30° Down": {5:2,10:14,15:26,20:36},
+      "60° Down": {5:6,10:24,15:41,20:59},
+      "90° Side": {5:7,10:23,15:41,20:58},
+      "60° Up":   {5:3,10:17,15:29,20:42},
+      "30° Up":   {5:0,10:6,15:12,20:19}
+    },
+    "Steep 3%": {
+      "30° Down": {5:10,10:31,15:52,20:72},
+      "60° Down": {5:16,10:47,15:78,20:106},
+      "90° Side": {5:15,10:42,15:70,20:96},
+      "60° Up":   {5:8,10:27,15:46,20:63},
+      "30° Up":   {5:1,10:11,15:19,20:28}
+    },
+    "Severe 4%": {
+      "30° Down": {5:21,10:58,15:95,20:128},
+      "60° Down": {5:30,10:80,15:128,20:174},
+      "90° Side": {5:23,10:64,15:104,20:142},
+      "60° Up":   {5:12,10:37,15:62,20:85},
+      "30° Up":   {5:3,10:14,15:25,20:36}
+    }
+  },
+  11: {
+    "Flat 1%": {
+      "30° Down": {5:-2,10:5,15:10,20:14},
+      "60° Down": {5:2,10:10,15:19,20:27},
+      "90° Side": {5:2,10:11,15:20,20:29},
+      "60° Up":   {5:0,10:7,15:15,20:22},
+      "30° Up":   {5:-2,10:2,15:6,20:10}
+    },
+    "Avg 2%": {
+      "30° Down": {5:4,10:17,15:31,20:44},
+      "60° Down": {5:9,10:29,15:49,20:68},
+      "90° Side": {5:8,10:28,15:48,20:66},
+      "60° Up":   {5:5,10:19,15:33,20:47},
+      "30° Up":   {5:0,10:7,15:15,20:22}
+    },
+    "Steep 3%": {
+      "30° Down": {5:13,10:38,15:63,20:86},
+      "60° Down": {5:20,10:56,15:92,20:124},
+      "90° Side": {5:17,10:48,15:80,20:109},
+      "60° Up":   {5:9,10:30,15:51,20:71},
+      "30° Up":   {5:1,10:12,15:22,20:31}
+    },
+    "Severe 4%": {
+      "30° Down": {5:29,10:77,15:123,20:165},
+      "60° Down": {5:38,10:99,15:158,20:214},
+      "90° Side": {5:28,10:75,15:123,20:167},
+      "60° Up":   {5:14,10:41,15:69,20:96},
+      "30° Up":   {5:4,10:15,15:27,20:39}
+    }
+  },
+  12: {
+    "Flat 1%": {
+      "30° Down": {5:0,10:6,15:11,20:17},
+      "60° Down": {5:1,10:12,15:21,20:31},
+      "90° Side": {5:2,10:12,15:24,20:33},
+      "60° Up":   {5:0,10:9,15:17,20:25},
+      "30° Up":   {5:-2,10:2,15:7,20:12}
+    },
+    "Avg 2%": {
+      "30° Down": {5:5,10:21,15:36,20:50},
+      "60° Down": {5:11,10:34,15:56,20:77},
+      "90° Side": {5:10,10:31,15:53,20:74},
+      "60° Up":   {5:6,10:22,15:37,20:52},
+      "30° Up":   {5:0,10:8,15:16,20:24}
+    },
+    "Steep 3%": {
+      "30° Down": {5:16,10:46,15:77,20:105},
+      "60° Down": {5:24,10:66,15:107,20:147},
+      "90° Side": {5:19,10:54,15:90,20:124},
+      "60° Up":   {5:11,10:33,15:56,20:77},
+      "30° Up":   {5:2,10:13,15:24,20:34}
+    },
+    "Severe 4%": {
+      "30° Down": {5:38,10:99,15:159,20:214},
+      "60° Down": {5:54,10:122,15:196,20:264},
+      "90° Side": {5:34,10:90,15:146,20:198},
+      "60° Up":   {5:15,10:46,15:78,20:108},
+      "30° Up":   {5:4,10:17,15:30,20:43}
+    }
+  }
+};
+
+let stimp = 9, slope = "Avg 2%", dir = "90° Side", dist = 10, unit = "cm";
+
+try { stimp = parseInt(localStorage.getItem("ap_stimp")) || 9; } catch {}
+document.getElementById("stimpSlider").value = stimp;
+updateStimpDisplay();
+updateResult();
+
+function onStimpChange(v) {
+  stimp = parseInt(v);
+  try { localStorage.setItem("ap_stimp", stimp); } catch {}
+  updateStimpDisplay();
+  updateResult();
+}
+
+function updateStimpDisplay() {
+  document.getElementById("stimpVal").textContent = "Stimp " + stimp;
+  document.querySelectorAll(".stimp-ticks span").forEach((el, i) => {
+    el.className = (i + 7 === stimp) ? "active" : "";
+  });
+}
+
+function setSlope(s, btn) {
+  slope = s;
+  document.querySelectorAll("#slopeGrid .btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById("sumSlope").textContent = s;
+  updateResult();
+}
+
+function setDir(d, btn) {
+  dir = d;
+  document.querySelectorAll("#dirGrid .btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById("sumDir").textContent = d;
+  updateResult();
+}
+
+function setDist(d, btn) {
+  dist = d;
+  document.querySelectorAll("#distGrid .btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById("sumDist").textContent = d + "ft";
+  updateResult();
+}
+
+function toggleUnit() {
+  unit = unit === "cm" ? "in" : "cm";
+  document.getElementById("unitBtn").textContent = unit === "cm" ? "cm → in" : "in → cm";
+  updateResult();
+}
+
+function updateResult() {
+  const val = DATA[stimp]?.[slope]?.[dir]?.[dist] ?? null;
+  const numEl = document.getElementById("resultNum");
+  const unitEl = document.getElementById("resultUnit");
+  const subEl = document.getElementById("resultSub");
+
+  if (val === null) {
+    numEl.textContent = "—";
+    unitEl.textContent = "";
+    subEl.textContent = "";
+    return;
+  }
+
+  if (val <= 0) {
+    numEl.textContent = "0";
+    unitEl.textContent = unit === "cm" ? "centimetres" : "inches";
+    subEl.textContent = "";
+    return;
+  }
+
+  if (unit === "cm") {
+    numEl.textContent = val;
+    unitEl.textContent = "centimetres";
+    subEl.textContent = "";
+  } else {
+    const inches = (val / 2.54).toFixed(1);
+    numEl.textContent = inches;
+    unitEl.textContent = "inches";
+    subEl.textContent = "(" + val + " cm)";
+  }
+}
+</script>
+</body>
+</html>
